@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from conan import ConanFile
-from conan.tools.files import download, copy, rmdir
-from conan.errors import ConanInvalidConfiguration, ConanException
-import json, os, shlex, shutil
+from conan.tools.files import get, copy
+from conan.errors import ConanInvalidConfiguration
+import json, os
 
 required_conan_version = ">=2.0"
 
@@ -49,71 +49,14 @@ class MicrochipXC8ToolchainConan(ConanFile):
                 f"{self.name} {self.version} is only supported for the following architectures on {self.settings.os}: {valid_arch}")
 
     def source(self):
-        download(self, **self.conan_data["sources"][self.version], filename="xc8-installer.run")
-
-    def _sandbox_mounts(self):
-        """
-        The installer insists on running as root and on creating /opt/microchip/xclm/license, regardless of --prefix.
-        It also drops logs and helper scripts into /tmp. To keep the build free of root rights and side effects,
-        it runs inside an unprivileged user + mount namespace with private tmpfs mounts over these locations.
-        """
-        own_paths = [os.path.realpath(p) for p in (self.source_folder, self.build_folder)]
-
-        def hides_own_path(mount_point):
-            return any(p == mount_point or p.startswith(mount_point + os.sep) for p in own_paths)
-
-        # /opt/microchip is enough if it exists (a mount point must exist and can't be created without real root)
-        opt = "/opt/microchip" if os.path.isdir("/opt/microchip") else "/opt"
-        if hides_own_path(opt):
-            raise ConanException(f"The conan build folder must not be located in {opt}")
-        mounts = [opt]
-        if not hides_own_path("/tmp"):
-            mounts.append("/tmp")
-        return mounts, opt
-
-    def build(self):
-        if not shutil.which("unshare"):
-            raise ConanException("'unshare' (util-linux) is required to run the XC8 installer without root rights")
-
-        # Copy the installer, as the source folder may be read-only and the downloaded file is not executable
-        installer = os.path.join(self.build_folder, "xc8-installer.run")
-        shutil.copyfile(os.path.join(self.source_folder, "xc8-installer.run"), installer)
-        os.chmod(installer, 0o755)
-
-        prefix = os.path.join(self.build_folder, "xc8")
-        home = os.path.join(self.build_folder, "home")
-        rmdir(self, prefix)
-        rmdir(self, home)
-        os.makedirs(home)
-
-        mounts, opt = self._sandbox_mounts()
-        # The installer segfaults if TMPDIR is a long path, so use a short one located on the private tmpfs
-        tmpdir = os.path.join(opt, ".xc8-installer-tmp")
-        install_cmd = " ".join([
-            f"TMPDIR={shlex.quote(tmpdir)}",
-            f"HOME={shlex.quote(home)}",
-            shlex.quote(installer),
-            "--mode unattended",
-            "--unattendedmodeui none",
-            f"--prefix {shlex.quote(prefix)}",
-            "--LicenseType FreeMode",
-            "--netservername localhost",
-            "--ModifyAll 0",
-        ])
-        script = " && ".join([f"mount -t tmpfs tmpfs {m}" for m in mounts] + [f"mkdir {tmpdir}", install_cmd])
-        self.output.info(f"Running the XC8 installer in a user namespace with private {' and '.join(mounts)}")
-        self.run(f"unshare --user --map-root-user --mount sh -c {shlex.quote(script)}")
-
-        if not os.path.isfile(os.path.join(prefix, "bin", "xc8-cc")):
-            raise ConanException("The XC8 installer did not produce bin/xc8-cc")
+        # Since v4.00 Microchip provides the compiler as a plain tarball in addition to the .run installer
+        get(self, **self.conan_data["sources"][self.version], destination="xc8", strip_root=True)
 
     def package(self):
-        prefix = os.path.join(self.build_folder, "xc8")
-        copy(self, "*", src=prefix, dst=self.package_folder,
-             excludes=["Uninstall*", "rollbackBackupDirectory/*"])
-        copy(self, "license.txt", src=os.path.join(prefix, "docs"), dst=os.path.join(self.package_folder, "licenses"))
-        copy(self, "MPLAB_XC8_C_Compiler_License.rtf", src=os.path.join(prefix, "docs"),
-             dst=os.path.join(self.package_folder, "licenses"))
+        xc8 = os.path.join(self.source_folder, "xc8")
+        copy(self, "*", src=xc8, dst=self.package_folder)
+        for license_file in ["license.txt", "MPLAB_XC8_C_Compiler_License.rtf", "LLVM_LICENSE.txt", "COPYRIGHT-MUSL.txt"]:
+            copy(self, license_file, src=os.path.join(xc8, "docs"), dst=os.path.join(self.package_folder, "licenses"))
         copy(self, "xc8-*.cmake", src=os.path.join(self.source_folder, "cmake"),
              dst=os.path.join(self.package_folder, "cmake"))
 

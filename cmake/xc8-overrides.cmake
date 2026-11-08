@@ -11,10 +11,10 @@ set(CMAKE_DEPFILE_FLAGS_ASM "-MD -MF <DEP_FILE>")
 set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> <LINK_FLAGS> <TARGET> <OBJECTS>")
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> <LINK_FLAGS> <TARGET> <OBJECTS>")
 
-# The unlicensed (Free) compiler allows optimization levels up to and including -O2 (-Os and -O3 require PRO)
+# Since XC8 v4.00 all optimization levels are available without a license
 foreach(lang C ASM)
     set(CMAKE_${lang}_FLAGS_DEBUG_INIT "-O0 -gdwarf-3")
     set(CMAKE_${lang}_FLAGS_RELEASE_INIT "-O2")
     set(CMAKE_${lang}_FLAGS_RELWITHDEBINFO_INIT "-O2 -gdwarf-3")
-    set(CMAKE_${lang}_FLAGS_MINSIZEREL_INIT "-O2")
+    set(CMAKE_${lang}_FLAGS_MINSIZEREL_INIT "-Os")
 endforeach()

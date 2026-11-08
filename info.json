@@ -1,5 +1,5 @@
 {
-  "version": "3.10",
+  "version": "4.00",
   "projectName": "microchip-xc8-toolchain",
   "projectDescription": "A conan package for the Microchip MPLAB XC8 C compiler (PIC).",
   "vendor": "Björn Stresing",

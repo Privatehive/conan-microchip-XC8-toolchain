@@ -11,10 +11,10 @@
 | `Linux` | `x86_64` | [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Privatehive/conan-microchip-XC8-toolchain/main.yml?branch=master&style=flat&logo=github&label=create+package)](https://github.com/Privatehive/conan-microchip-XC8-toolchain/actions?query=branch%3Amaster) |
 
 Only the recipe is uploaded to the conan remote, not the binary package (see [License](#license)).
-`conan create`/`conan install` with `-b missing` builds the package locally from Microchip's installer.
+`conan create`/`conan install` with `-b missing` builds the package locally from Microchip's download.
 
-The package is built from Microchip's official installer
-(`xc8-v3.10-full-install-linux-x64-installer.run`, see [conandata.yml](conandata.yml)).
+The package is made from the official compiler tarball (`xc8-v4.00-full-install-linux-x64.tar.xz`, see [conandata.yml](conandata.yml)),
+which Microchip provides since v4.00 in addition to the `.run` installer.
 It needs neither root rights nor any additional system packages.
 
 ## Create the package
@@ -22,12 +22,6 @@ It needs neither root rights nor any additional system packages.
 ```shell
 conan create .
 ```
-
-The installer insists on running as root and writes to `/opt/microchip/xclm` and `/tmp` regardless of `--prefix`.
-That's why the recipe runs it unattended inside an unprivileged user + mount namespace
-(`unshare --user --map-root-user --mount`, part of util-linux) with private tmpfs mounts over those locations.
-Nothing is written outside the conan cache. The build host must allow unprivileged user namespaces.
-That's the default on most distributions, but Ubuntu 24.04 restricts them via AppArmor.
 
 ## Usage
 
@@ -40,7 +34,7 @@ os=baremetal
 build_type=Debug
 
 [tool_requires]
-microchip-xc8-toolchain/3.10@de.privatehive/stable
+microchip-xc8-toolchain/4.00@de.privatehive/stable
 ```
 
 Conan has no PIC architecture, so leave `arch` and `compiler` unset (and don't declare them in the consuming recipe).
@@ -67,19 +61,19 @@ def generate(self):
     tc.generate()
 ```
 
-`CMAKE_BUILD_TYPE` maps to the following flags. The unlicensed (Free) compiler supports up to `-O2`.
+`CMAKE_BUILD_TYPE` maps to the following flags. Since v4.00 all optimization levels are available without a license.
 
 | Build type       | Flags             |
 | ---------------- | ----------------- |
 | `Debug`          | `-O0 -gdwarf-3`   |
 | `Release`        | `-O2`             |
 | `RelWithDebInfo` | `-O2 -gdwarf-3`   |
-| `MinSizeRel`     | `-O2`             |
+| `MinSizeRel`     | `-Os`             |
 
 Example project: [ThePerfectCounter](https://github.com/Tereius/ThePerfectCounter)
 
 ## License
 
-The compiler is installed in Free mode and is subject to the
+The compiler is subject to the
 [MPLAB XC8 C Compiler License](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers), which is packaged in `licenses/`.
 Don't upload the binary package to a public remote, as that redistributes the compiler.

@@ -12,7 +12,7 @@ jobs:
       conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
 
   # Only the recipe is uploaded: the package contains the Microchip XC8 compiler, which must not be redistributed.
-  # Consumers build the package locally from Microchip's installer (conan create/install with -b missing).
+  # Consumers build the package locally from Microchip's download (conan create/install with -b missing).
   upload_recipe:
     name: "Finalize"
     uses: Privatehive/conan-workflows/.github/workflows/uploadRecipe.yml@master
