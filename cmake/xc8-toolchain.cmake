@@ -44,3 +44,8 @@ list(APPEND CMAKE_TRY_COMPILE_PLATFORM_VARIABLES XC8_MCU XC8_DFP)
 # The link step runs the compiler driver with <FLAGS>, so the device also reaches the linker
 string(APPEND CMAKE_C_FLAGS_INIT " -mcpu=${XC8_MCU} -mdfp=${XC8_DFP}")
 string(APPEND CMAKE_ASM_FLAGS_INIT " -mcpu=${XC8_MCU} -mdfp=${XC8_DFP}")
+
+# IDE support: CLion custom compiler definition (see xc8-clion.cmake)
+if(NOT CMAKE_IN_TRY_COMPILE)
+    include("${CMAKE_CURRENT_LIST_DIR}/xc8-clion.cmake")
+endif()

@@ -70,6 +70,15 @@ def generate(self):
 | `RelWithDebInfo` | `-O2 -gdwarf-3`   |
 | `MinSizeRel`     | `-Os`             |
 
+### CLion
+
+CLion can't query `xc8-cc` for its predefined macros and include paths, so loading a project fails with
+"Cannot get compiler information". On every configure, the toolchain therefore writes a
+[custom compiler definition](https://www.jetbrains.com/help/clion/custom-compilers.html) for the selected device to
+`<build folder>/xc8-clion.yaml`. The macros and include paths come from XC8's internal front end.
+Register the file once per project in *Settings | Build, Execution, Deployment | Toolchains | Custom Compiler*
+("Use custom compiler config") and reload the CMake project.
+
 Example project: [ThePerfectCounter](https://github.com/Tereius/ThePerfectCounter)
 
 ## License

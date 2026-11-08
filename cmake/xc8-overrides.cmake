@@ -8,6 +8,13 @@ set(CMAKE_ASM_OUTPUT_EXTENSION .o)
 set(CMAKE_DEPFILE_FLAGS_C "-MD -MF <DEP_FILE>")
 set(CMAKE_DEPFILE_FLAGS_ASM "-MD -MF <DEP_FILE>")
 
+# CMake identifies XC8 as Clang (its front end is based on clang) and would add clang's -fcolor-diagnostics,
+# which xc8-cc rejects, when CMAKE_COLOR_DIAGNOSTICS is enabled (e.g. by CLion)
+foreach(lang C ASM)
+    set(CMAKE_${lang}_COMPILE_OPTIONS_COLOR_DIAGNOSTICS "")
+    set(CMAKE_${lang}_COMPILE_OPTIONS_COLOR_DIAGNOSTICS_OFF "")
+endforeach()
+
 set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> <LINK_FLAGS> <TARGET> <OBJECTS>")
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> <LINK_FLAGS> <TARGET> <OBJECTS>")
 
