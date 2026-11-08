@@ -1,0 +1,13 @@
+{
+  "version": "3.10",
+  "projectName": "microchip-xc8-toolchain",
+  "projectDescription": "A conan package for the Microchip MPLAB XC8 C compiler (PIC).",
+  "vendor": "Björn Stresing",
+  "contact": "bjoern.stresing@gmx.de",
+  "domain": "de.privatehive",
+  "copyrightYear": "2023",
+  "repository": "https://github.com/Privatehive/conan-microchip-XC8-toolchain",
+  "topics": ["Microchip", "PIC", "XC8", "Cross"],
+  "homepage": "https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers",
+  "license": "GPL"
+}
